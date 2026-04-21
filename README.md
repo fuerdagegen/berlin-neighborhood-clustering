@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-This project builds a geospatial feature engineering and clustering pipeline to uncover latent neighborhood structure in Berlin.
+This project builds a geospatial pipeline for feature engineering and clustering to uncover latent neighborhood structure in Berlin.
 
 It shows that urban similarity is not fixed, but depends on user preferences.
 
@@ -19,7 +19,7 @@ The pipeline extends clustering toward **preference-aware neighborhood similarit
 - unsupervised learning (K-means, PCA)
 - user-intent weighting across feature groups
 
-Clustering and preference logic are partially modularized into reusable Python modules.
+Clustering and preference logic are partially modularized into reusable Python modules for experimentation and reuse.
 
 ---
 
@@ -27,7 +27,7 @@ Clustering and preference logic are partially modularized into reusable Python m
 
 ![Berlin neighborhood clusters](assets/kmeans_clusters_map.png)
 
-The analysis reveals a clear structure in Berlin’s neighborhood space:
+The analysis reveals a clear and interpretable structure in Berlin’s neighborhood space:
 
 - baseline clustering (k = 3) separates central, intermediate, and peripheral neighborhoods  
 - nightlife is the strongest structural signal, isolating a compact urban core  
@@ -45,7 +45,7 @@ These results show how clustering can move from exploratory analysis toward **pr
 
 ![PCA projection](assets/pca_projection.png)
 
-The PCA projection shows clear separation between clusters, indicating that the feature space captures meaningful differences in neighborhood structure.
+The PCA projection shows clear separation between clusters, confirming that the feature space captures meaningful differences in neighborhood structure.
 
 ---
 
@@ -53,13 +53,13 @@ The PCA projection shows clear separation between clusters, indicating that the 
 
 ![Silhouette plot](assets/silhouette_plot.png)
 
-The silhouette plot confirms good separation for the k = 3 solution, with most neighborhoods assigned to well-defined clusters.
+The silhouette plot confirms good separation for the k = 3 solution, with most neighborhoods forming well-defined clusters.
 
 ---
 
 ## Project structure
 
-The repository is organized to separate raw data inputs, SQL feature generation, notebook-based exploration, and future production code.
+The repository is structured to separate data extraction, feature engineering, exploratory analysis, and reusable modeling logic.
 
 ```text
 berlin-neighborhood-clustering/
@@ -93,24 +93,28 @@ berlin-neighborhood-clustering/
 └── README.md
 ```
 
-### Folder and file overview
+---
 
-#### Root-level data files
+### Folder overview
+
+#### data/
+
+Contains intermediate and final feature tables used for modeling.
 
 - `neighborhood_features_counts.csv`  
-  Intermediate output containing neighborhood-level raw amenity counts and selected structured signals.
+  raw neighborhood-level amenity counts  
 
 - `neighborhood_features_exploration.csv`  
-  Final feature table after density, share, population-normalized, and proximity transformations.
+  fully engineered feature table  
 
 - `population_data.csv`  
-  Population data imported from Berlin open data and used for per-capita normalization.
+  population data used for per-capita normalization  
 
 ---
 
-#### `notebooks/`
+#### notebooks/
 
-Contains exploratory workflows and interpretation.
+Contains exploratory workflows, feature engineering, and clustering interpretation.
 
 - `01_data_exploration.ipynb`  
   - loads SQL outputs  
@@ -118,69 +122,87 @@ Contains exploratory workflows and interpretation.
   - explores correlations and data quality  
   - exports the final modeling-ready feature table  
 
-- `02_clustering.ipynb`  
+- `02_neighborhood_clustering_analysis.ipynb`  
   - performs clustering analysis (K-means, PCA)  
   - evaluates cluster quality  
   - interprets neighborhood typologies  
   - explores user-intent weighting scenarios  
 
-The notebooks remain the primary interface for exploration and interpretation.
+The notebooks remain the primary interface for analysis and interpretation.
 
 ---
 
-#### `sql/`
+#### sql/
 
-Contains SQL scripts executed against PostGIS source tables.
+Contains PostGIS-based feature extraction logic.
 
 - `create_neighborhood_amenity_counts.sql`  
-  Generates raw neighborhood-level amenity counts and structured signals.
+  generates raw neighborhood-level amenity counts  
 
 - `create_neighborhood_proximity_features.sql`  
-  Generates centroid-based proximity metrics using nearest-neighbor distance logic.
+  generates centroid-based proximity metrics  
 
 ---
 
-#### `src/`
+#### src/
 
 Contains reusable Python modules extracted from the clustering workflow.
 
-The goal of this folder is to separate stable, reusable logic from notebook experimentation.
-
-Current modules:
+This folder separates stable, reusable logic from notebook-based experimentation.
 
 - `clustering.py`  
-  Core clustering utilities, including:
-  - K-means evaluation across k values  
-  - elbow curve computation  
-  - silhouette and quality metrics  
-  - cluster interpretation helpers  
+  K-means evaluation, clustering diagnostics, and interpretation helpers  
 
 - `weighting.py`  
-  Functions for user-intent simulation through feature weighting:
-  - applying group-based feature weights  
-  - weight sensitivity analysis  
-  - weighted clustering diagnostics  
+  feature weighting, sensitivity analysis, and weighted clustering workflows  
 
 - `scoring.py`  
-  Preference-based scoring utilities:
-  - ranking clusters based on selected feature subsets  
-  - identifying best-matching clusters for user profiles  
+  preference-based scoring and cluster ranking  
 
 ---
 
 Feature engineering logic is intentionally **not** included in `src/`.
 
-This is because transformations depend on feature-specific semantic decisions, such as:
+Transformations depend on feature-specific semantic decisions, such as:
 
-- whether a signal should be modeled as raw count  
+- raw counts vs normalized features  
 - spatial density (`per sq km`)  
 - population-normalized density (`per 1,000`)  
 - area share  
-- or centroid-based proximity (with varying k)
+- centroid-based proximity (with varying k)  
 
-These decisions are currently explored and validated in the notebook rather than abstracted into a generic pipeline.
+These decisions are explored and validated in the notebooks rather than abstracted into a generic pipeline.
 
-Future iterations may progressively formalize this layer once transformation rules stabilize.
+Future iterations may formalize this layer once transformation rules stabilize.
+
+---
+
+## How to reproduce the analysis
+
+This project relies on internal geospatial source tables (`berlin_source_data`) used for feature generation.
+
+Since these raw layers are not publicly available, the full SQL pipeline cannot be executed outside the original environment.
+
+However, the project remains fully reproducible from the feature engineering stage onward.
+
+This separation reflects a common real-world setup where raw data pipelines are not publicly shareable, but modeling layers remain portable and reproducible.
+
+To reproduce the analysis:
+
+1. load the prepared dataset  
+   `data/neighborhood_features_exploration.csv`
+
+2. run the clustering workflow  
+   `notebooks/02_neighborhood_clustering_analysis.ipynb`
+
+This includes:
+
+- K-means clustering  
+- PCA projection  
+- cluster evaluation  
+- user-intent weighting experiments  
+
+The provided dataset represents the complete modeling input used for all results in this repository.
 
 ---
 
@@ -196,42 +218,40 @@ The unit of analysis is the Berlin **Ortsteil** (neighborhood).
 
 The engineered feature space is designed to support multiple neighborhood perspectives, including:
 
-These include:
-
 - **accessibility and transport**
-  - public transport stops
-  - station proximity
-  - bike lane infrastructure
-  - walkable service access
+  - public transport stops  
+  - station proximity  
+  - bike lane infrastructure  
+  - walkable service access  
 
 - **family and residential services**
-  - kindergartens
-  - schools
-  - playgrounds
-  - parks
-  - healthcare access
+  - kindergartens  
+  - schools  
+  - playgrounds  
+  - parks  
+  - healthcare access  
 
 - **nightlife and social infrastructure**
-  - spaetis
-  - venues
-  - social clubs
-  - theaters
-  - cinemas
-  - nightlife density
+  - spaetis  
+  - venues  
+  - social clubs  
+  - theaters  
+  - cinemas  
+  - nightlife density  
 
 - **culture and tourism**
-  - galleries
-  - museums
-  - hotels
-  - cultural venues
-  - entertainment hubs
+  - galleries  
+  - museums  
+  - hotels  
+  - cultural venues  
+  - entertainment hubs  
 
 - **housing and urban pressure**
-  - long-term listings
-  - housing price signals
-  - milieuschutz areas
+  - long-term listings  
+  - housing price signals  
+  - milieuschutz areas  
 
-These perspectives are not modeled as separate outputs, but are embedded into the feature space so that unsupervised methods can later identify latent neighborhood archetypes.
+These perspectives are embedded into the feature space so that unsupervised methods can identify latent neighborhood archetypes.
 
 ---
 
@@ -255,14 +275,26 @@ The file used in this project is:
 
 One data issue was identified:
 
-- **Schlachtensee** exists as a separate neighborhood in newer administrative versions
+- **Schlachtensee** exists as a separate neighborhood in newer administrative versions  
 
 For speed, its population was temporarily redistributed across:
 
-- Zehlendorf
-- Nikolassee
+- Zehlendorf  
+- Nikolassee  
 
 This assumption should be revisited in future versions.
+
+---
+
+### Data availability
+
+The raw geospatial layers used for feature generation are not included in this repository.
+
+They originate from an internal PostGIS database and were used to build the initial feature tables.
+
+To ensure reproducibility, all downstream analysis is based on exported datasets available in `/data/`.
+
+This reflects a common real-world setup where raw data pipelines are not publicly shareable, while modeling layers remain portable and reproducible.
 
 ---
 
@@ -282,32 +314,30 @@ The goal is to balance interpretability and modeling readiness, ensuring feature
 
 ## Why raw counts are not suitable for modeling
 
-Raw amenity counts were intentionally not used as final modeling features because they are structurally biased and difficult to compare across neighborhoods.
+Raw amenity counts were intentionally excluded from the final modeling features because they are structurally biased and not comparable across neighborhoods.
 
 Absolute counts are influenced by multiple scale effects, including:
 
-- neighborhood area
-- population size
-- degree of urbanization
+- neighborhood area  
+- population size  
+- degree of urbanization  
 
-This means that highly urban districts often show larger counts simply because they concentrate many amenities and activities.
+As a result, highly urban districts tend to show larger counts simply due to the concentration of amenities and activities. Larger neighborhoods may also accumulate higher counts due to their physical extent.
 
-At the same time, larger neighborhoods may also accumulate higher counts due to their physical extent.
+Raw counts therefore mix together:
 
-As a result, raw counts mix together:
+- urban intensity  
+- neighborhood size  
+- service concentration  
 
-- urban intensity
-- neighborhood size
-- service concentration
-
-This makes them unsuitable as direct clustering features, because the model may primarily separate neighborhoods by scale rather than by functional urban profile.
+This makes them unsuitable as direct clustering features, as the model would primarily separate neighborhoods by scale rather than by functional urban profile.
 
 To ensure comparability and interpretability, count-based features were transformed into normalized representations such as:
 
-- amenities per km²
-- amenities per 1,000 residents
-- land-use shares
-- centroid-based proximity metrics
+- amenities per km²  
+- amenities per 1,000 residents  
+- land-use shares  
+- centroid-based proximity metrics  
 
 Raw counts were retained only for initial inspection and data quality checks.
 
@@ -317,41 +347,39 @@ Raw counts were retained only for initial inspection and data quality checks.
 
 Before feature engineering, all source layers were audited.
 
-A major finding was the distinction between:
+A key distinction was identified between:
 
-- structured fields
-- noisy free-text fields
+- structured fields  
+- noisy free-text fields  
 
 ### Included
 
-Examples of structured signals:
+Structured signals such as:
 
-- counts
-- accessibility flags
-- capacities
-- areas
-- numeric attributes
-- categorical amenity types
+- counts  
+- accessibility flags  
+- capacities  
+- areas  
+- numeric attributes  
+- categorical amenity types  
 
 ### Excluded
 
 Fields such as:
 
-- `opening_hours`
-- `operating_hours`
-- free-text descriptions
+- `opening_hours`  
+- `operating_hours`  
+- free-text descriptions  
 
-were intentionally excluded.
-
-These fields were highly inconsistent and would require dedicated preprocessing.
+were intentionally excluded due to inconsistency and lack of standardization.
 
 Examples included:
 
-- `24/7`
-- `Mo-Fr 08:00-18:00`
-- `see website`
+- `24/7`  
+- `Mo-Fr 08:00-18:00`  
+- `see website`  
 
-These remain strong future candidates for liveliness features.
+These fields remain strong candidates for future work on temporal and liveliness features.
 
 ---
 
@@ -637,16 +665,6 @@ Neighborhood similarity is not fixed but depends on user priorities.
 - combined preferences produce more realistic, multi-criteria neighborhood groupings  
 
 This shows how clustering can evolve from exploratory analysis into a foundation for user-driven recommendation systems.
-
----
-
-## How to run
-
-1. execute SQL scripts to generate raw feature tables  
-2. run `01_data_exploration.ipynb` to build the feature space  
-3. run `02_neighborhood_clustering_analysis.ipynb` to perform clustering and analysis  
-
-Core reusable logic is available in `src/`.
 
 ---
 
