@@ -2,51 +2,44 @@
 
 ## TL;DR
 
-This project transforms raw Berlin amenity and infrastructure layers into an interpretable neighborhood-level feature table and uses it to uncover urban structure through clustering.
+This project builds a geospatial feature engineering and clustering pipeline to uncover latent neighborhood structure in Berlin.
 
-The workflow moves from raw counts to normalized and spatially meaningful features:
+It shows that urban similarity is not fixed, but depends on user preferences.
 
-- spatial density (`per sq km`)
-- population density (`per 1,000 residents`)
-- area shares (parks, playgrounds, protection zones)
-- proximity metrics (distance to nearest 1 / 3 / 5 amenities)
-- accessibility ratio
+Using spatial features, accessibility metrics, and feature weighting, the analysis identifies:
 
-The resulting feature space is used for:
+- a baseline structure of central, intermediate, and peripheral neighborhoods
+- nightlife as a dominant structural signal
+- transport as a reinforcing accessibility gradient
+- family-related features as a filter rather than a driver
 
-- K-means clustering and PCA-based exploration  
-- identification of neighborhood typologies (central, intermediate, peripheral)  
-- user-intent weighting (family, nightlife, transport, composite scenarios)  
+The pipeline extends clustering toward **preference-aware neighborhood similarity**, combining:
 
-This allows the model to move beyond static clustering toward **preference-aware neighborhood similarity**.
+- feature engineering from raw geospatial data
+- unsupervised learning (K-means, PCA)
+- user-intent weighting across feature groups
 
-Clustering and user-intent modeling logic are partially modularized into reusable Python modules.
+Clustering and preference logic are partially modularized into reusable Python modules.
 
 ---
 
-## Results at a glance
+## Key findings
+
+![Berlin neighborhood clusters](assets/kmeans_clusters_map.png)
 
 The analysis reveals a clear structure in Berlin’s neighborhood space:
 
-- baseline clustering (k = 3) separates central, intermediate, and peripheral neighborhoods
-- nightlife is the strongest structural signal, isolating a compact urban core
-- transport reinforces an existing accessibility gradient rather than reshaping it
-- family-related features act as a filter rather than a primary segmentation axis
-- combined user preferences produce realistic, multi-criteria neighborhood groupings
+- baseline clustering (k = 3) separates central, intermediate, and peripheral neighborhoods  
+- nightlife is the strongest structural signal, isolating a compact urban core  
+- transport reinforces an existing accessibility gradient rather than reshaping it  
+- family-related features act as a filter rather than a primary segmentation axis  
+- combined user preferences produce realistic, multi-criteria neighborhood groupings  
 
-These results show how clustering can move from exploratory analysis toward preference-aware neighborhood recommendation.
+These results show how clustering can move from exploratory analysis toward **preference-aware neighborhood recommendation**.
 
 ---
 
 ## Example outputs
-
-### K-means clustering (k = 3)
-
-![KMeans clusters](assets/kmeans_clusters_map.png)
-
-The baseline clustering reveals a strong spatial structure, separating central neighborhoods from intermediate and peripheral areas.
-
----
 
 ### PCA projection of neighborhood feature space
 
@@ -193,15 +186,7 @@ Future iterations may progressively formalize this layer once transformation rul
 
 ## Project objective
 
-The goal of this project is to create a robust feature space describing Berlin neighborhoods.
-
-The final dataset is designed for:
-
-- Clustering
-- PCA
-- Neighborhood segmentation
-- Urban typology discovery
-- Downstream predictive modeling
+The objective of this project is to engineer an interpretable neighborhood-level feature space for Berlin and use it to discover urban typologies through clustering.
 
 The unit of analysis is the Berlin **Ortsteil** (neighborhood).
 
@@ -209,7 +194,7 @@ The unit of analysis is the Berlin **Ortsteil** (neighborhood).
 
 ## Intended clustering perspectives
 
-The engineered feature space is designed to support multiple neighborhood perspectives that can later be used for clustering and urban typology discovery.
+The engineered feature space is designed to support multiple neighborhood perspectives, including:
 
 These include:
 
@@ -281,18 +266,17 @@ This assumption should be revisited in future versions.
 
 ---
 
-## Feature engineering philosophy
+## Feature engineering approach
 
-Feature transformations follow six principles:
+The feature space combines:
 
-1. **Raw counts for initial inspection**
-2. **Spatial density for infrastructure and activity layers**
-3. **Population density for resident-facing services**
-4. **Area shares for land-use features**
-5. **Proximity from centroid to amenities**
-6. **Interpretable accessibility signal**
+- spatial density (per sq km)  
+- population-normalized density (per 1,000 residents)  
+- land-use shares  
+- centroid-based proximity metrics  
+- accessibility ratios  
 
-This keeps the feature space explainable while making it suitable for clustering.
+The goal is to balance interpretability and modeling readiness, ensuring features reflect meaningful urban structure rather than raw scale effects.
 
 ---
 
@@ -626,67 +610,21 @@ This likely separates:
 
 ---
 
-## Clustering and key findings
+## Clustering and user-intent analysis
 
-The engineered feature space was used to explore neighborhood structure through unsupervised learning, focusing on both baseline clustering and user-intent weighting scenarios.
+The feature space was used to explore both:
 
-### Baseline clustering
+- baseline clustering structure  
+- user-intent driven similarity through feature weighting  
 
-K-means clustering on the full feature space identifies a structure primarily driven by accessibility, service density, and urban centrality.
+Baseline clustering reveals a structure driven by accessibility, service density, and urban centrality.
 
-The optimal solution (`k = 3`) separates:
+User-intent weighting shows that different feature groups play very different roles:
 
-- highly accessible central neighborhoods  
-- intermediate residential areas  
-- peripheral low-access zones  
-
-This indicates that Berlin’s neighborhood structure is largely shaped by gradients of accessibility and urban intensity.
-
----
-
-### User-intent weighting
-
-To simulate real-world decision-making, feature groups were reweighted to reflect different user priorities.
-
-#### Family-oriented
-
-- requires strong weighting to influence clustering  
-- does not produce fine-grained segmentation  
-- mainly separates accessible vs peripheral neighborhoods  
-
-→ family-related features act as a **filter**, not a structural driver  
-
----
-
-#### Nightlife-oriented
-
-- strongly reshapes clustering even at moderate weights  
-- produces a compact, clearly separated urban core  
-
-→ nightlife is a **dominant structural dimension** in the city  
-
----
-
-#### Transport-oriented
-
-- gradually reshapes clustering while remaining aligned with the baseline  
-- reveals a three-level connectivity structure:
-  - transport core  
-  - intermediate accessible belt  
-  - peripheral low-connectivity areas  
-
-→ transport strengthens and refines the **existing accessibility gradient**  
-
----
-
-#### Composite user-intent scenario
-
-A combined preference profile (family + transport, reduced nightlife) produces:
-
-- a broad cluster of neighborhoods balancing accessibility and livability  
-- a smaller cluster of more peripheral, lower-access areas  
-
-→ composite weighting behaves as a **preference filter on top of the baseline structure**, rather than creating a new segmentation  
+- nightlife strongly reshapes the structure  
+- family mainly acts as a filter  
+- transport sharpens an existing accessibility gradient  
+- combined preferences produce realistic, multi-criteria neighborhood groupings
 
 ---
 
@@ -699,6 +637,16 @@ Neighborhood similarity is not fixed but depends on user priorities.
 - combined preferences produce more realistic, multi-criteria neighborhood groupings  
 
 This shows how clustering can evolve from exploratory analysis into a foundation for user-driven recommendation systems.
+
+---
+
+## How to run
+
+1. execute SQL scripts to generate raw feature tables  
+2. run `01_data_exploration.ipynb` to build the feature space  
+3. run `02_neighborhood_clustering_analysis.ipynb` to perform clustering and analysis  
+
+Core reusable logic is available in `src/`.
 
 ---
 
@@ -859,3 +807,9 @@ The objective remains to identify latent neighborhood archetypes such as:
 This is what we mean by **neighborhood typology discovery**:
 
 identifying groups of neighborhoods that share similar urban characteristics based on the engineered feature space, and extending this toward user-driven similarity and recommendation.
+
+---
+
+## Closing note
+
+This project demonstrates how unsupervised learning can move beyond static segmentation toward user-aware similarity, bridging exploratory analysis and recommendation systems.
