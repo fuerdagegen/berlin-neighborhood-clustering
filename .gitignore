@@ -1,0 +1,11 @@
+.DS_Store
+neighborhood_clustering/notebooks/01_data_exploration_v1.ipynb
+neighborhood_clustering/notebooks/02_clustering_v1.ipynb
+neighborhood_clustering/notebooks/02_clustering_v2.ipynb
+neighborhood_clustering/notebooks/02_clustering_v3.ipynb
+neighborhood_clustering/notebooks/02_clustering_v4.ipynb
+neighborhood_clustering/notebooks/.env
+neighborhood_clustering/notebooks/02_clustering_with_functions.ipynb
+__pycache__/
+*.pyc
+.env
